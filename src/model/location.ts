@@ -10,8 +10,6 @@ class PickupLocation {
 }
 
 const buildPickupLocation = async(ds: DeliverySolutionsClient) => {
-    const dsps = await ds.getConfiguredDSPs()
-    console.log(dsps)
 }
 
 export { PickupLocation, buildPickupLocation }

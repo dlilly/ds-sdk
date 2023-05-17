@@ -1,6 +1,6 @@
 import chalk from 'chalk'
 import { input, select } from '@inquirer/prompts'
-import { Brand } from '../model/datamodel'
+import { Brand } from '../model/brand'
 import { Address } from "../model/address"
 import { DeliverySolutionsClient } from '../ds-client'
 import { buildPickupLocation } from '../model/location'

@@ -1,36 +1,5 @@
-import chalk from 'chalk'
-import { input, select } from '@inquirer/prompts'
-import { Brand } from '../model/datamodel'
-import { Address } from "../model/address"
+import { brandQuestionnaire, selectBrand } from '../model/brand'
 import { DeliverySolutionsClient } from '../ds-client'
-
-const brandQuestionnaire = async (): Promise<Brand> => ({
-    name: await input({ message: 'name' }),
-    address: await addressQuestionnaire()
-})
-
-const selectBrand = async(ds: DeliverySolutionsClient): Promise<Brand | undefined> => {
-    const brands = await ds.getBrands()
-    const selectedName = await select({
-        message: 'select a brand',
-        choices: brands.map(brand => ({
-            ...brand,
-            description: brand.name,
-            value: brand.name
-        }))
-    })
-    return brands.find(brand => brand.name === selectedName)
-}
-
-const addressQuestionnaire = async (): Promise<Address> => ({
-    street: await input({ message: 'street' }),
-    street2: await input({ message: `street 2 ${(chalk.green(`[ optional ]`))}` }),
-    apartmentNumber: await input({ message: 'apartment number [ optional ]' }),
-    city: await input({ message: 'city' }),
-    state: await input({ message: 'state' }),
-    country: await input({ message: 'country [ optional ]' }),
-    zipcode: await input({ message: 'zip code' }),
-})
 
 export const command = 'brand'
 export const description = 'manage brands'

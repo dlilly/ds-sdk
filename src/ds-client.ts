@@ -1,6 +1,7 @@
-import { Brand, Package } from "./model/datamodel"
 import axios, { AxiosRequestConfig } from "axios"
 import { PickupLocation } from "./model/location"
+import { Brand } from "./model/brand"
+import { Package } from "./model/package"
 
 const baseURL = `https://sandbox.api.deliverysolutions.co/api/v2`
 
