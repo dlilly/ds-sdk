@@ -2,6 +2,9 @@ import axios, { AxiosRequestConfig } from "axios"
 import { PickupLocation } from "./model/location"
 import { Brand } from "./model/brand"
 import { Package } from "./model/package"
+import _ from 'lodash'
+
+const { AutoComplete, Form, Confirm } = require('enquirer')
 
 const baseURL = `https://sandbox.api.deliverysolutions.co/api/v2`
 
@@ -37,10 +40,16 @@ class DeliverySolutionsClient {
         })
     }
 
-    // deno-lint-ignore no-explicit-any
     async post(apiPath: string, data: any): Promise<any> {
         return await this.do(apiPath, {
             method: 'post',
+            data
+        })
+    }
+
+    async patch(apiPath: string, data: any): Promise<any> {
+        return await this.do(apiPath, {
+            method: 'patch',
             data
         })
     }
@@ -65,8 +74,25 @@ class DeliverySolutionsClient {
     }
     /* end brand methods */
 
-    async createPackage(pkg: Package) {
-        return await this.post('/package', pkg)
+    async selectPackage(): Promise<Package> {
+        const packages = await this.getPackages()
+        const packageName = await (new AutoComplete({
+            name: 'package',
+            message: `select a package`,
+            limit: packages.length,
+            multiple: false,
+            choices: packages.map(p => p.name)
+        })).run()
+        return packages.find(pkg => pkg.name === packageName)!    
+    }
+
+    async upsertPackage(pkg: Package) {
+        if (pkg._id) {
+            return await this.post(`/package/packageExternalId/${pkg.packageExternalId}`, _.omit(pkg, ['packageExternalId', '_id']))
+        }
+        else {
+            return await this.post('/package', pkg)
+        }
     }
 
     async getPackages(): Promise<Package[]> {

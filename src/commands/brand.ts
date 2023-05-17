@@ -4,6 +4,17 @@ import { DeliverySolutionsClient } from '../ds-client'
 export const command = 'brand'
 export const description = 'manage brands'
 
+/**
+ * there are two api calls exposed for brands:
+ * 
+ * get brand details (GET /api/v2/brand/getById/brandExternalId/<brandExternalId>)
+ * create brand (POST /api/v2/brand)
+ * 
+ * additionally, there appears to be at least one undocumented api:
+ * 
+ * list brands (GET /api/v2/brand)
+ */
+
 export const builder = (yargs: any): any =>
   yargs
     .command("list", "list brands", {}, async (context: { ds: DeliverySolutionsClient }) => {
@@ -14,7 +25,7 @@ export const builder = (yargs: any): any =>
         const brand = context.brandExternalId ? await context.ds.getBrand(context.brandExternalId) : await selectBrand(context.ds)
         console.log(brand)
     })
-    .command("add", "add a brand", {}, async function (context: { ds: DeliverySolutionsClient }) {
+    .command("create", "create a brand", {}, async function (context: { ds: DeliverySolutionsClient }) {
         const brand = await brandQuestionnaire()
         console.log(brand)
 
@@ -24,8 +35,5 @@ export const builder = (yargs: any): any =>
         } catch (error) {
             console.log(`error: ${error}`)
         }
-    })
-    .command("delete", "delete a brand", {}, async function (context: { ds: DeliverySolutionsClient }) {
-        await selectBrand(context.ds)
     })
     .help();
