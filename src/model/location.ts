@@ -7,9 +7,17 @@ class PickupLocation {
     storeExternalId!: string
     address!: Address
     contact!: Contact
+    timeZone!: string
+    currencyCode!: string
+    description!: string
+    pickupInstructions!: string
+    returnStoreId!: string
+    dsps!: any[]
 }
 
 const buildPickupLocation = async(ds: DeliverySolutionsClient) => {
 }
 
-export { PickupLocation, buildPickupLocation }
+const selectLocation = async (context: { ds: DeliverySolutionsClient, location?: PickupLocation }): Promise<PickupLocation> => context.location || await context.ds.selectPickupLocation()
+
+export { PickupLocation, buildPickupLocation, selectLocation }

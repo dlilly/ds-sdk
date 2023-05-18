@@ -13,6 +13,10 @@ class Address {
     longitude?: string;
 }
 
+const addressToString = (address: Address): string => {
+    return `${address.street}\n${address.city}, ${address.state}\n${address.zipcode} ${address.country || ''}`
+}
+
 class Contact {
     name!: string
     phone!: string
@@ -28,4 +32,4 @@ const addressQuestionnaire = async (): Promise<Address> => ({
     zipcode: await input({ message: 'zip code' }),
 })
 
-export { Address, Contact, addressQuestionnaire }
+export { Address, Contact, addressQuestionnaire, addressToString }

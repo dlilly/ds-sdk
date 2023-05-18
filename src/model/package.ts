@@ -6,6 +6,11 @@ import { Dimension } from "./common"
 import { OrderItem } from "./orderitem"
 import chalk from "chalk"
 
+/**
+ * there are some discrepancies between the Package in listPackages, etc and the Package in Models
+ * (eg, the one in Models is more like order-package)
+ */
+
 class Package {
     _id?: string // if _id is part of the data model, it should be reflected on the models page, see below
     packageExternalId!: string // this field is not reflected on the models page for Package: https://docs.deliverysolutions.co/reference/package
@@ -32,12 +37,12 @@ class PackageInput {
 const editPackage = (pkg?: Package): Promise<Package> => new Form({
         message: `package details (${chalk.whiteBright('↑/↓/⇥')} to navigate, ${chalk.greenBright('↵')} to submit)`,
         choices: [
-            { name: 'name', message: 'package name', initial: pkg?.name },
-            { name: 'packageExternalId', message: 'package external id', initial: pkg?.packageExternalId },
-            { name: 'weight', message: 'weight (lb)', initial: `${pkg?.weight}` },
-            { name: 'height', message: 'height (in)', initial: `${pkg?.size?.height}` },
-            { name: 'width', message: 'width (in)', initial: `${pkg?.size?.width}` },
-            { name: 'length', message: 'length (in)', initial: `${pkg?.size?.length}` }
+            { name: 'name', message: 'package name', initial: pkg?.name || '' },
+            { name: 'packageExternalId', message: 'package external id', initial: pkg?.packageExternalId || '' },
+            { name: 'weight', message: 'weight (lb)', initial: `${pkg?.weight || ''}` },
+            { name: 'height', message: 'height (in)', initial: `${pkg?.size?.height || ''}` },
+            { name: 'width', message: 'width (in)', initial: `${pkg?.size?.width || ''}` },
+            { name: 'length', message: 'length (in)', initial: `${pkg?.size?.length || ''}` }
         ],
         validate: (input: PackageInput) => {
             return input.name.length === 0 && 'package name is required' ||
@@ -62,11 +67,6 @@ const editPackage = (pkg?: Package): Promise<Package> => new Form({
         })
     }).run()
 
-const selectPackage = async (context: { ds: DeliverySolutionsClient, pkg?: Package }): Promise<Package> => {
-    if (context.pkg) { 
-        return context.pkg
-    }
-    return await context.ds.selectPackage()
-}
+const selectPackage = async (context: { ds: DeliverySolutionsClient, pkg?: Package }): Promise<Package> => context.pkg || await context.ds.selectPackage()
 
 export { Package, editPackage, selectPackage }

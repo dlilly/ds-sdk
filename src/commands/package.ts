@@ -2,6 +2,7 @@ const { Confirm } = require('enquirer')
 import { Package, editPackage, selectPackage } from "../model/package";
 import { DeliverySolutionsClient } from "../ds-client";
 import chalk from 'chalk';
+import Table from "cli-table";
 
 export const command = 'package'
 export const description = 'manage packages'
@@ -16,6 +17,19 @@ export const description = 'manage packages'
  * delete package (DELETE /api/v2/package/packageExternalId/<packageExternalId>)
  */
 
+const tableizePackages = (packages: Package[]) => {
+    const table = new Table({
+        head: ['name\npackageExternalId','weight\n(lb)','height\n(in)','width\n(in)','length\n(in)'],
+        colWidths: [30, 10, 10, 10, 10]
+    })
+
+    packages.forEach(pkg => {
+        table.push([`${pkg.name}\n${chalk.cyan(pkg.packageExternalId)}`, `${pkg.weight}`, `${pkg.size?.height}`, `${pkg.size?.width}`, `${pkg.size?.length}`])
+    })
+
+    console.log(table.toString())
+}
+
 export const builder = (yargs: any): any =>
     yargs
         .middleware(async (context: { ds: DeliverySolutionsClient, packageExternalId?: string, pkg?: Package }, y: any) => {
@@ -28,17 +42,19 @@ export const builder = (yargs: any): any =>
             }
         })
         .command("list", "list packages", {}, async (context: { ds: DeliverySolutionsClient }) => {
-            console.log((await context.ds.getPackages()).map(pkg => pkg.packageExternalId))
+            tableizePackages(await context.ds.getPackages())
         })
         .command("get [packageExternalId]", "get package details", {}, async (context: { ds: DeliverySolutionsClient, pkg?: Package }) => {
-            console.log(await selectPackage(context))
+            tableizePackages([await selectPackage(context)])
         })
         .command("update [packageExternalId]", "update package", {}, async (context: { ds: DeliverySolutionsClient, pkg?: Package }) => {
             const updated = await context.ds.upsertPackage(await editPackage(await selectPackage(context)))
+            tableizePackages([updated])
             console.log(`${chalk.greenBright('success')} updated package ${updated.packageExternalId}`)
         })
         .command("create", "create a package", {}, async function (context: { ds: DeliverySolutionsClient }) {
             const created = await context.ds.upsertPackage(await editPackage())
+            tableizePackages([created])
             console.log(`${chalk.greenBright('success')} updated package ${created.packageExternalId}`)
         })
         .command("delete [packageExternalId]", "delete a package", {}, async function (context: { ds: DeliverySolutionsClient, packageExternalId?: string }) {
@@ -46,6 +62,7 @@ export const builder = (yargs: any): any =>
             if (await (new Confirm({ message: `delete package ${chalk.green(pkg.packageExternalId)}`, initial: true })).run()) {
                 try {
                     const deleted = await context.ds.deletePackage(pkg.packageExternalId)
+                    tableizePackages([deleted])
                     console.log(`${chalk.greenBright('success')} package ${chalk.green(deleted.packageExternalId)} deleted`)
                 } catch (error) {
                     console.error(`${chalk.red('error')} deleting package ${chalk.green(pkg.packageExternalId)}: ${error}`)

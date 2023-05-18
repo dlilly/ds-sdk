@@ -61,8 +61,19 @@ class DeliverySolutionsClient {
     }
 
     /* brand methods */
-    async getBrands(): Promise<Brand[]> {
-        return await this.get('/brand')
+    async selectBrand(context: { filterActive?: boolean }): Promise<Brand> {
+        const brands = await this.getBrands(context)
+        const selectedName = await (new AutoComplete({
+            message: 'select a brand',
+            choices: brands.map(brand => brand.name),
+            multiple: false,
+            limit: brands.length
+        })).run()
+        return brands.find(brand => brand.name === selectedName)!
+    }
+
+    async getBrands(opts: { filterActive?: boolean }): Promise<Brand[]> {
+        return (await this.get('/brand')).filter((brand: { active: any }) => !opts.filterActive || opts.filterActive && brand.active)
     }
 
     async getBrand(id: string): Promise<Brand> {
@@ -105,6 +116,21 @@ class DeliverySolutionsClient {
 
     async deletePackage(id: string): Promise<Package> {
         return await this.delete(`/package/packageExternalId/${id}`)
+    }
+
+    async selectPickupLocation(): Promise<PickupLocation> {
+        const locations = await this.getPickupLocations()
+        const selectedName = await (new AutoComplete({
+            message: 'select a location',
+            choices: locations.map(l => l.name),
+            multiple: false,
+            limit: locations.length
+        })).run()
+        return locations.find(loc => loc.name === selectedName)!
+    }
+
+    async getPickupLocation(id: string): Promise<PickupLocation> {
+        return await this.get(`/store/getById/storeExternalId/${id}`)
     }
 
     async getPickupLocations(): Promise<PickupLocation[]> {

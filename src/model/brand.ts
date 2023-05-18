@@ -11,8 +11,8 @@ class Brand {
 
     _id?: string
     brandExternalId?: string
-    description?: string
-    currencyCode?: string
+    description?: string = ''
+    currencyCode?: string = ''
     active?: boolean
     tenantId?: string
     atRisk?: AtRisk
@@ -34,17 +34,6 @@ const brandQuestionnaire = async (): Promise<Brand> => ({
     address: await addressQuestionnaire()
 })
 
-const selectBrand = async(ds: DeliverySolutionsClient): Promise<Brand | undefined> => {
-    const brands = await ds.getBrands()
-    const selectedName = await select({
-        message: 'select a brand',
-        choices: brands.map(brand => ({
-            ...brand,
-            description: brand.name,
-            value: brand.name
-        }))
-    })
-    return brands.find(brand => brand.name === selectedName)
-}
+const selectBrand = async (context: { ds: DeliverySolutionsClient, brand?: Brand, filterActive?: boolean }): Promise<Brand> => context.brand || await context.ds.selectBrand(context)
 
 export { Brand, AtRisk, brandQuestionnaire, selectBrand }
