@@ -1,8 +1,8 @@
 const { Confirm } = require('enquirer')
-import { Package, editPackage, selectPackage } from "../model/package";
+import { Package } from "../model/package";
 import { DeliverySolutionsClient } from "../ds-client";
 import chalk from 'chalk';
-import Table from "cli-table";
+import { selectPackage, editPackage, tableizePackages } from "../ui/package";
 
 export const command = 'package'
 export const description = 'manage packages'
@@ -16,19 +16,6 @@ export const description = 'manage packages'
  * update package (POST /api/v2/package/packageExternalId/<packageExternalId>)
  * delete package (DELETE /api/v2/package/packageExternalId/<packageExternalId>)
  */
-
-const tableizePackages = (packages: Package[]) => {
-    const table = new Table({
-        head: ['name\npackageExternalId','weight\n(lb)','height\n(in)','width\n(in)','length\n(in)'],
-        colWidths: [30, 10, 10, 10, 10]
-    })
-
-    packages.forEach(pkg => {
-        table.push([`${pkg.name}\n${chalk.cyan(pkg.packageExternalId)}`, `${pkg.weight}`, `${pkg.size?.height}`, `${pkg.size?.width}`, `${pkg.size?.length}`])
-    })
-
-    console.log(table.toString())
-}
 
 export const builder = (yargs: any): any =>
     yargs

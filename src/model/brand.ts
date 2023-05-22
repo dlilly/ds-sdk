@@ -1,25 +1,43 @@
-import { input, select } from "@inquirer/prompts"
-import { Address, addressQuestionnaire } from "./address"
-import { DeliverySolutionsClient } from "../ds-client"
+import { Address } from "./address"
 
-/* 
-    there does not appear to be a corresponding model page for Brand, was trying to figure out what an AtRisk is
-*/
+/**
+ * there are two api calls exposed for brands:
+ * 
+ * get brand details (GET /api/v2/brand/getById/brandExternalId/<brandExternalId>)
+ * create brand (POST /api/v2/brand)
+ * 
+ * additionally, there appears to be at least one undocumented api:
+ * 
+ * list brands (GET /api/v2/brand)
+ * 
+ * Brand needs a page in the Models section
+ * 
+ * there are two undocumented fields in the payload returned from get brand details:
+ * 
+ * brandLogo
+ * isDeleted
+ * 
+ */
 class Brand {
-    name!: string
-    address!: Address
+    name: string
+    address: Address
 
-    _id?: string
-    brandExternalId?: string
-    description?: string = ''
-    currencyCode?: string = ''
-    active?: boolean
-    tenantId?: string
+    _id: string = ''
+    brandExternalId: string = ''
+    description: string = ''
+    currencyCode: string = ''
+    active: boolean = false
+    tenantId: string = ''
     atRisk?: AtRisk
-    pickupInstructions?: string
-    isDefault?: boolean
-    createdAt?: string
-    lastUpdatedAt?: string
+    pickupInstructions: string = ''
+    isDefault: boolean = false
+    createdAt: string = ''
+    lastUpdatedAt: string = ''
+
+    constructor(input: { name: string, address: Address }) {
+        this.name = input.name
+        this.address = input.address
+    }
 }
 
 /* i don't really see any documentation around AtRisk */
@@ -29,11 +47,4 @@ class AtRisk {
     dropoffEnd!: number
 }
 
-const brandQuestionnaire = async (): Promise<Brand> => ({
-    name: await input({ message: 'name' }),
-    address: await addressQuestionnaire()
-})
-
-const selectBrand = async (context: { ds: DeliverySolutionsClient, brand?: Brand, filterActive?: boolean }): Promise<Brand> => context.brand || await context.ds.selectBrand(context)
-
-export { Brand, AtRisk, brandQuestionnaire, selectBrand }
+export { Brand, AtRisk }

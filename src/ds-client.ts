@@ -136,6 +136,13 @@ class DeliverySolutionsClient {
     async getPickupLocations(): Promise<PickupLocation[]> {
         return await this.get('/store')
     }
+
+    async getRates(location: PickupLocation, zipcode: string): Promise<any> {
+        return await this.post(`/rates`, {
+            storeExternalIds: [location.storeExternalId],
+            deliveryAddress: { zipcode }
+        })
+    }
 }
 
 export { DeliverySolutionsClient }

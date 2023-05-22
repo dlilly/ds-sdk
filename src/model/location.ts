@@ -15,9 +15,4 @@ class PickupLocation {
     dsps!: any[]
 }
 
-const buildPickupLocation = async(ds: DeliverySolutionsClient) => {
-}
-
-const selectLocation = async (context: { ds: DeliverySolutionsClient, location?: PickupLocation }): Promise<PickupLocation> => context.location || await context.ds.selectPickupLocation()
-
-export { PickupLocation, buildPickupLocation, selectLocation }
+export { PickupLocation }
