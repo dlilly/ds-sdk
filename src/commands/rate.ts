@@ -27,7 +27,7 @@ export const builder = (yargs: any): any =>
         .middleware(async (context: { ds: DeliverySolutionsClient, pickupLocation?: string, location?: PickupLocation }, y: any) => {
             if (context.pickupLocation) {
                 try {
-                    context.location = await context.ds.getPickupLocation(context.pickupLocation)
+                    context.location = await context.ds.location.getOne(context.pickupLocation)
                 } catch (error) {
                     throw new Error(`${chalk.redBright('error')} location ${chalk.green(context.pickupLocation)} not found`)
                 }
@@ -39,8 +39,7 @@ export const builder = (yargs: any): any =>
                 message: 'delivery zip code'
             }).run()
 
-            const result = await context.ds.getRates(location, zipcode)
-
-            tableizeRates(result.rates)
+            const result = await context.ds.rate.get(location, zipcode)
+            tableizeRates(result)
         })
         .help();

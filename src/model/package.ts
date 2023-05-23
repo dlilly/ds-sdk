@@ -1,3 +1,7 @@
+/*
+    https://docs.deliverysolutions.co/reference/package
+*/
+
 import { Dimension } from "./common"
 import { OrderItem } from "./orderitem"
 
@@ -7,16 +11,22 @@ import { OrderItem } from "./orderitem"
  */
 
 class Package {
-    _id?: string // if _id is part of the data model, it should be reflected on the models page, see below
+    // name of package or 'custom'
+    name!: string
+
+    // unique id that maps to package id in customer system
     packageExternalId!: string // this field is not reflected on the models page for Package: https://docs.deliverysolutions.co/reference/package
 
-    name!: string
-    items?: number = 1
-
-    quantity?: number
-    description?: string
+    // package size
     size?: Dimension
+
+    // package weight in lb
     weight?: number
+    
+    // these need to move elsewhere
+    description?: string
+    quantity?: number
+    items?: number = 1
     itemList?: OrderItem[]
 }
 

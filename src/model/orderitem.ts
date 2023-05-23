@@ -1,3 +1,7 @@
+/*
+    https://docs.deliverysolutions.co/reference/item-order
+*/
+
 import { Dimension } from "./common"
 
 class OrderItem {

@@ -36,7 +36,7 @@ const editPackage = (pkg?: Package): Promise<Package> => new Form({
             true
     },
     result: (input: PackageInput): Package => ({
-        _id: pkg?._id,
+        // _id: pkg?._id,
         name: input.name,
         packageExternalId: input.packageExternalId,
         weight: parseFloat(input.weight),
@@ -48,7 +48,22 @@ const editPackage = (pkg?: Package): Promise<Package> => new Form({
     })
 }).run()
 
-const selectPackage = async (context: { ds: DeliverySolutionsClient, pkg?: Package }): Promise<Package> => context.pkg || await context.ds.selectPackage()
+
+const selectPackage = async (context: { ds: DeliverySolutionsClient, pkg?: Package }): Promise<Package> => {
+    if (context.pkg) {
+        return context.pkg
+    }
+
+    const packages = await context.ds.package.get()
+    const packageName = await (new AutoComplete({
+        name: 'package',
+        message: `select a package`,
+        limit: packages.length,
+        multiple: false,
+        choices: packages.map(p => p.name)
+    })).run()
+    return packages.find(pkg => pkg.name === packageName)!    
+}
 
 const tableizePackages = (packages: Package[]) => {
     const table = new Table({

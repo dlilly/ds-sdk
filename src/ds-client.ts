@@ -3,27 +3,42 @@ import { PickupLocation } from "./model/location"
 import { Brand } from "./model/brand"
 import { Package } from "./model/package"
 import _ from 'lodash'
-
-const { AutoComplete, Form, Confirm } = require('enquirer')
+import { Rate } from "./model/rate"
 
 const baseURL = `https://sandbox.api.deliverysolutions.co/api/v2`
 
-class DeliverySolutionsClient {
-    tenantId: string
-    apiKey: string
-
-    constructor(tenantId: string, apiKey: string) {
-        this.tenantId = tenantId
-        this.apiKey = apiKey
+/*
+    Delivery Solutions client interface
+*/
+interface DeliverySolutionsClient {
+    brand: {
+        get: (opts?: { filterActive: boolean }) => Promise<Brand[]>,
+        getOne: (id: string) => Promise<Brand>,
+        create: (brand: Brand) => Promise<Brand>
+    },
+    package: {
+        get: () => Promise<Package[]>,
+        getOne: (id: string) => Promise<Package>,
+        upsert: (pkg: Package) => Promise<Package>,
+        delete: (id: string) => Promise<Package>
+    },
+    location: {
+        get: () => Promise<PickupLocation[]>,
+        getOne: (id: string) => Promise<PickupLocation>
+    },
+    rate: {
+        get: (location: PickupLocation, zipcode: string) => Promise<Rate[]>
     }
+}
 
-    async do(apiPath: string, init?: AxiosRequestConfig) {
-        const response = await axios.request({
+const DSClient = (tenantId: string, apiKey: string): DeliverySolutionsClient => {
+    const request = async (apiPath: string, init?: AxiosRequestConfig) => {
+        return await axios.request({
             ...init,
             url: encodeURI(`${baseURL}${apiPath}`),
             headers: {
-                'tenantId': this.tenantId,
-                'x-api-key': this.apiKey
+                'tenantId': tenantId,
+                'x-api-key': apiKey
             },
             // proxy: {
             //     protocol: 'http',
@@ -31,118 +46,46 @@ class DeliverySolutionsClient {
             //     port: 8888
             // }
         })
-        return response.data
     }
 
-    async get(apiPath: string) {
-        return await this.do(apiPath, {
-            method: 'get'
-        })
+    /* http client wrapper */
+    const http = {
+        get: async (apiPath: string) => (await request(apiPath)).data,
+        post: async (apiPath: string, data: any) => (await request(apiPath, { method: 'post', data })).data,
+        patch: async (apiPath: string, data: any) => (await request(apiPath, { method: 'patch', data })).data,
+        delete: async (apiPath: string) => (await request(apiPath, { method: 'delete' })).data
     }
 
-    async post(apiPath: string, data: any): Promise<any> {
-        return await this.do(apiPath, {
-            method: 'post',
-            data
-        })
-    }
-
-    async patch(apiPath: string, data: any): Promise<any> {
-        return await this.do(apiPath, {
-            method: 'patch',
-            data
-        })
-    }
-
-    async delete(apiPath: string): Promise<any> {
-        return await this.do(apiPath, {
-            method: 'delete'
-        })
-    }
-
-    /* brand methods */
-    async selectBrand(context: { filterActive?: boolean }): Promise<Brand> {
-        const brands = await this.getBrands(context)
-        const selectedName = await (new AutoComplete({
-            message: 'select a brand',
-            choices: brands.map(brand => brand.name),
-            multiple: false,
-            limit: brands.length
-        })).run()
-        return brands.find(brand => brand.name === selectedName)!
-    }
-
-    async getBrands(opts: { filterActive?: boolean }): Promise<Brand[]> {
-        return (await this.get('/brand')).filter((brand: { active: any }) => !opts.filterActive || opts.filterActive && brand.active)
-    }
-
-    async getBrand(id: string): Promise<Brand> {
-        return await this.get(`/brand/getById/brandExternalId/${id}`)
-    }
-
-    async createBrand(brand: Brand): Promise<Brand> {
-        return await this.post('/brand', brand)
-    }
-    /* end brand methods */
-
-    async selectPackage(): Promise<Package> {
-        const packages = await this.getPackages()
-        const packageName = await (new AutoComplete({
-            name: 'package',
-            message: `select a package`,
-            limit: packages.length,
-            multiple: false,
-            choices: packages.map(p => p.name)
-        })).run()
-        return packages.find(pkg => pkg.name === packageName)!    
-    }
-
-    async upsertPackage(pkg: Package) {
-        if (pkg._id) {
-            return await this.post(`/package/packageExternalId/${pkg.packageExternalId}`, _.omit(pkg, ['packageExternalId', '_id']))
+    return {
+        brand: {
+            get: async (opts?: { filterActive: boolean }): Promise<Brand[]> => (await http.get('/brand')).filter((brand: { active: any }) => !opts?.filterActive || brand.active),
+            getOne: (id: string): Promise<Brand> => http.get(`/brand/getById/brandExternalId/${id}`),
+            create: (brand: Brand): Promise<Brand> => http.post('/brand', brand)
+        },
+        package: {
+            get: (): Promise<Package[]> => http.get('/package'),
+            getOne: (id: string): Promise<Package> => http.get(`/package/getById/packageExternalId/${id}`),
+            upsert: async (pkg: Package): Promise<Package> => {
+                // if (pkg._id) {
+                //     return await http.post(`/package/packageExternalId/${pkg.packageExternalId}`, _.omit(pkg, ['packageExternalId', '_id']))
+                // }
+                // else {
+                    return await http.post('/package', pkg)
+                // }
+            },
+            delete: (id: string): Promise<Package> => http.delete(`/package/packageExternalId/${id}`)
+        },
+        location: {
+            get: (): Promise<PickupLocation[]> => http.get(`/store`),
+            getOne: (id: string): Promise<PickupLocation> => http.get(`/store/getById/storeExternalId/${id}`)
+        },
+        rate: {
+            get: async (location: PickupLocation, zipcode: string): Promise<Rate[]> => (await http.post(`/rates`, {
+                storeExternalIds: [location.storeExternalId],
+                deliveryAddress: { zipcode }
+            })).rates
         }
-        else {
-            return await this.post('/package', pkg)
-        }
-    }
-
-    async getPackages(): Promise<Package[]> {
-        return await this.get('/package')
-    }
-
-    async getPackage(id: string): Promise<Package> {
-        return await this.get(`/package/getById/packageExternalId/${id}`)
-    }
-
-    async deletePackage(id: string): Promise<Package> {
-        return await this.delete(`/package/packageExternalId/${id}`)
-    }
-
-    async selectPickupLocation(): Promise<PickupLocation> {
-        const locations = await this.getPickupLocations()
-        const selectedName = await (new AutoComplete({
-            message: 'select a location',
-            choices: locations.map(l => l.name),
-            multiple: false,
-            limit: locations.length
-        })).run()
-        return locations.find(loc => loc.name === selectedName)!
-    }
-
-    async getPickupLocation(id: string): Promise<PickupLocation> {
-        return await this.get(`/store/getById/storeExternalId/${id}`)
-    }
-
-    async getPickupLocations(): Promise<PickupLocation[]> {
-        return await this.get('/store')
-    }
-
-    async getRates(location: PickupLocation, zipcode: string): Promise<any> {
-        return await this.post(`/rates`, {
-            storeExternalIds: [location.storeExternalId],
-            deliveryAddress: { zipcode }
-        })
     }
 }
 
-export { DeliverySolutionsClient }
+export { DeliverySolutionsClient, DSClient }

@@ -1,3 +1,7 @@
+/*
+    https://docs.deliverysolutions.co/reference/brands (no page under model?)
+*/
+
 import { Address } from "./address"
 
 /**
@@ -9,8 +13,6 @@ import { Address } from "./address"
  * additionally, there appears to be at least one undocumented api:
  * 
  * list brands (GET /api/v2/brand)
- * 
- * Brand needs a page in the Models section
  * 
  * there are two undocumented fields in the payload returned from get brand details:
  * 

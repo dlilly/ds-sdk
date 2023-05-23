@@ -1,16 +1,55 @@
-import { input } from "@inquirer/prompts"
 import { DeliverySolutionsClient } from "../ds-client"
-import { addressQuestionnaire, addressToString } from "../ui/address"
+import { addressPrompts, addressToString } from "../ui/address"
 import { Brand } from "../model/brand"
 import Table from "cli-table"
 import chalk from "chalk"
+import { AutoComplete, Form } from "../helpers/enquirer"
 
-const brandQuestionnaire = async (): Promise<Brand> => new Brand({
-    name: await input({ message: 'name' }),
-    address: await addressQuestionnaire()
-})
+class BrandInput {
+    name!: string
+    street!: string
+    city!: string
+    state!: string
+    zipcode!: string
+}
 
-const selectBrand = async (context: { ds: DeliverySolutionsClient, brand?: Brand, filterActive?: boolean }): Promise<Brand> => context.brand || await context.ds.selectBrand(context)
+const createBrand = async (): Promise<Brand> => {
+    const brandForm = new Form({
+        message: `brand details (${chalk.whiteBright('↑/↓/⇥')} to navigate, ${chalk.greenBright('↵')} to submit)`,
+        choices: [
+            { name: 'name', message: `name` },
+            { name: 'brandExternalId', message: 'brand external id' },
+            { name: 'description', message: 'description' },
+            { name: 'currencyCode', message: 'iso-4217 currency code' }
+        ],
+        validate: (input: BrandInput) => {
+            return input.name.length === 0 && 'name is required' ||
+                input.street.length === 0 && 'street address is required' ||
+                input.city.length === 0 && 'city is required' ||
+                input.state.length === 0 && 'state is required' ||
+                input.zipcode.length === 0 && 'zipcode is required' ||
+                true
+        }
+    })
+
+    brandForm.choices.push(...addressPrompts)
+    return await brandForm.run()
+}
+
+const selectBrand = async (context: { ds: DeliverySolutionsClient, brand?: Brand, filterActive?: boolean }): Promise<Brand> => {
+    if (context.brand) {
+        return context.brand
+    }
+
+    const brands = await context.ds.brand.get({ filterActive: context.filterActive || false })
+    const selectedName = await (new AutoComplete({
+        message: 'select a brand',
+        choices: brands.map(brand => brand.name),
+        multiple: false,
+        limit: brands.length
+    })).run()
+    return brands.find(brand => brand.name === selectedName)!
+}
 
 const tableizeBrands = (brands: Brand[]) => {
     const table = new Table({
@@ -25,4 +64,4 @@ const tableizeBrands = (brands: Brand[]) => {
     console.log(table.toString())
 }
 
-export { brandQuestionnaire, selectBrand, tableizeBrands }
+export { createBrand, selectBrand, tableizeBrands }

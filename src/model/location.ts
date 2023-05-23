@@ -1,8 +1,13 @@
-import { DeliverySolutionsClient } from "../ds-client"
-import { Address, Contact } from "./address"
+/*
+    https://docs.deliverysolutions.co/reference/pickup-location
+*/
+
+import { Address } from "./address"
+import { Contact } from "./contact"
 
 class PickupLocation {
     _id!: string
+    active: boolean = true
     name!: string
     storeExternalId!: string
     address!: Address
@@ -12,7 +17,8 @@ class PickupLocation {
     description!: string
     pickupInstructions!: string
     returnStoreId!: string
-    dsps!: any[]
+    dspAttributes: any
+    DSPs!: any[]
 }
 
 export { PickupLocation }
