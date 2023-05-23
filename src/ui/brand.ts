@@ -1,5 +1,5 @@
-import { DeliverySolutionsClient } from "../ds-client"
-import { addressPrompts, addressToString } from "../ui/address"
+import { DeliverySolutionsClient } from "../ds/client"
+import { addressPrompts, addressToString, validateAddress } from "../ui/address"
 import { Brand } from "../model/brand"
 import Table from "cli-table"
 import chalk from "chalk"
@@ -13,26 +13,23 @@ class BrandInput {
     zipcode!: string
 }
 
-const createBrand = async (): Promise<Brand> => {
+const editBrand = async (context: { ds: DeliverySolutionsClient, brand?: Brand }): Promise<Brand> => {
     const brandForm = new Form({
-        message: `brand details (${chalk.whiteBright('↑/↓/⇥')} to navigate, ${chalk.greenBright('↵')} to submit)`,
+        message: `${chalk.cyanBright('brand details')} (${chalk.whiteBright('↑/↓/⇥')} to navigate, ${chalk.greenBright('↵')} to submit)`,
         choices: [
-            { name: 'name', message: `name` },
-            { name: 'brandExternalId', message: 'brand external id' },
-            { name: 'description', message: 'description' },
-            { name: 'currencyCode', message: 'iso-4217 currency code' }
+            { name: 'name', message: `name`, initial: context.brand?.name || '' },
+            { name: 'brandExternalId', message: 'brand external id', initial: context.brand?.brandExternalId || '' },
+            { name: 'description', message: 'description', initial: context.brand?.description || '' },
+            { name: 'currencyCode', message: 'iso-4217 currency code', initial: context.brand?.currencyCode || '' },
+            { role: 'separator' },
+            ...addressPrompts(context.brand?.address)
         ],
         validate: (input: BrandInput) => {
             return input.name.length === 0 && 'name is required' ||
-                input.street.length === 0 && 'street address is required' ||
-                input.city.length === 0 && 'city is required' ||
-                input.state.length === 0 && 'state is required' ||
-                input.zipcode.length === 0 && 'zipcode is required' ||
+                validateAddress(input) ||
                 true
         }
     })
-
-    brandForm.choices.push(...addressPrompts)
     return await brandForm.run()
 }
 
@@ -64,4 +61,4 @@ const tableizeBrands = (brands: Brand[]) => {
     console.log(table.toString())
 }
 
-export { createBrand, selectBrand, tableizeBrands }
+export { editBrand, selectBrand, tableizeBrands }

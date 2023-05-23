@@ -1,21 +1,11 @@
 const { Confirm } = require('enquirer')
 import { Package } from "../model/package";
-import { DeliverySolutionsClient } from "../ds-client";
+import { DeliverySolutionsClient } from "../ds/client";
 import chalk from 'chalk';
 import { selectPackage, editPackage, tableizePackages } from "../ui/package";
 
 export const command = 'package'
 export const description = 'manage packages'
-
-/**
- * there are five api calls exposed for packages:
- * 
- * list packages (GET /api/v2/package)
- * create package (POST /api/v2/package)
- * get package details (GET /api/v2/package/getById/packageExternalId/<packageExternalId>)
- * update package (POST /api/v2/package/packageExternalId/<packageExternalId>)
- * delete package (DELETE /api/v2/package/packageExternalId/<packageExternalId>)
- */
 
 export const builder = (yargs: any): any =>
     yargs
@@ -35,14 +25,14 @@ export const builder = (yargs: any): any =>
             tableizePackages([await selectPackage(context)])
         })
         .command("update [packageExternalId]", "update package", {}, async (context: { ds: DeliverySolutionsClient, pkg?: Package }) => {
-            const updated = await context.ds.package.upsert(await editPackage(await selectPackage(context)))
+            const updated = await context.ds.package.update(await editPackage(await selectPackage(context)))
             tableizePackages([updated])
             console.log(`${chalk.greenBright('success')} updated package ${updated.packageExternalId}`)
         })
         .command("create", "create a package", {}, async function (context: { ds: DeliverySolutionsClient }) {
-            const created = await context.ds.package.upsert(await editPackage())
+            const created = await context.ds.package.create(await editPackage())
             tableizePackages([created])
-            console.log(`${chalk.greenBright('success')} updated package ${created.packageExternalId}`)
+            console.log(`${chalk.greenBright('success')} created package ${created.packageExternalId}`)
         })
         .command("delete [packageExternalId]", "delete a package", {}, async function (context: { ds: DeliverySolutionsClient, packageExternalId?: string }) {
             const pkg = await selectPackage(context)

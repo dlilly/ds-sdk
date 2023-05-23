@@ -1,8 +1,8 @@
 import chalk from 'chalk'
 
-import { DeliverySolutionsClient } from '../ds-client'
+import { DeliverySolutionsClient } from '../ds/client'
 import { PickupLocation } from '../model/location'
-import { createPickupLocation, selectLocation, tableizeLocations } from '../ui/location'
+import { editPickupLocation, selectLocation, tableizeLocations } from '../ui/location'
 
 export const command = 'location'
 export const description = 'manage locations'
@@ -25,11 +25,14 @@ export const builder = (yargs: any): any =>
       tableizeLocations([await selectLocation(context)])
     })
     .command("create", "create a location", {}, async function (context: { ds: DeliverySolutionsClient }) {
-      const created = await createPickupLocation()
-      console.log(created)
-
-      // const created = await context.ds.package.upsert(await editPackage())
-      // tableizePackages([created])
-      // console.log(`${chalk.greenBright('success')} updated package ${created.packageExternalId}`)
+      const created = await context.ds.location.create(await editPickupLocation(context))
+      tableizeLocations([created])
+      console.log(`${chalk.greenBright('success')} created location ${created.storeExternalId}`)
+    })
+    .command("update [storeExternalId]", "update a location", {}, async function (context: { ds: DeliverySolutionsClient, location?: PickupLocation }) {
+      context.location = context.location || await selectLocation(context)
+      const updated = await context.ds.location.update(await editPickupLocation(context))
+      tableizeLocations([updated])
+      console.log(`${chalk.greenBright('success')} updated location ${updated.storeExternalId}`)
     })
     .help();

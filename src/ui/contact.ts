@@ -4,9 +4,9 @@ const contactToString = (contact: Contact): string => {
     return `${contact.name}\n${contact.phone}`
 }
 
-const contactPrompts = [
-    { name: 'contactName', message: `contact name` },
-    { name: 'contactPhone', message: 'contact phone #' }
+const contactPrompts = (contact?: Contact) => [
+    { name: 'contactName', message: `contact name`, initial: contact?.name || '' },
+    { name: 'contactPhone', message: 'contact phone #', initial: contact?.phone || '' }
 ]
 
 class ContactInput {
@@ -16,8 +16,7 @@ class ContactInput {
 
 const validateContact = (input: ContactInput) => {
     return input.contactName.length === 0 && 'contact name is required' ||
-        input.contactPhone.length === 0 && 'contact phone is required' ||
-        true
+        input.contactPhone.length === 0 && 'contact phone is required'
 }
 
 export { contactToString, contactPrompts, validateContact }

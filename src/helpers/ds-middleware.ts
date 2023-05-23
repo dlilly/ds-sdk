@@ -1,5 +1,5 @@
 import { Arguments } from 'yargs'
-import { DeliverySolutionsClient, DSClient } from '../ds-client'
+import { DeliverySolutionsClient, DSClient } from '../ds/client'
 
 const middleware = (context: Arguments<{ ds?: DeliverySolutionsClient, dsTenantId?: string, dsApiKey?: string }>): any => {
     if (!context.ds) {

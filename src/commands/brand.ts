@@ -1,8 +1,8 @@
 import { Brand } from '../model/brand'
-import { DeliverySolutionsClient } from '../ds-client'
+import { DeliverySolutionsClient } from '../ds/client'
 
 import chalk from 'chalk'
-import { selectBrand, createBrand, tableizeBrands } from '../ui/brand'
+import { selectBrand, editBrand, tableizeBrands } from '../ui/brand'
 
 export const command = 'brand'
 export const description = 'manage brands'
@@ -34,12 +34,10 @@ export const builder = (yargs: any): any =>
             tableizeBrands([await selectBrand(context)])
         })
         .command("create", "create a brand", {}, async function (context: { ds: DeliverySolutionsClient }) {
-            const brand = await createBrand()
+            const brand = await editBrand(context)
             try {
-                console.log(brand)
-
-                // const returned = await context.ds.brand.create(brand)
-                // console.log(returned)
+                const returned = await context.ds.brand.create(brand)
+                console.log(returned)
             } catch (error) {
                 console.log(`error: ${error}`)
             }

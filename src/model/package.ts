@@ -6,6 +6,16 @@ import { Dimension } from "./common"
 import { OrderItem } from "./orderitem"
 
 /**
+ * there are five api calls exposed for packages:
+ * 
+ * list packages (GET /api/v2/package)
+ * create package (POST /api/v2/package)
+ * get package details (GET /api/v2/package/getById/packageExternalId/<packageExternalId>)
+ * update package (POST /api/v2/package/packageExternalId/<packageExternalId>)
+ * delete package (DELETE /api/v2/package/packageExternalId/<packageExternalId>)
+ */
+
+/**
  * there are some discrepancies between the Package in listPackages, etc and the Package in Models
  * (eg, the one in Models is more like order-package)
  */

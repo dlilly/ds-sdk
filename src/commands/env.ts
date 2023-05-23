@@ -1,7 +1,4 @@
-import { DeliverySolutionsClient, DSClient } from '../ds-client'
-import { createPickupLocation } from '../ui/location';
-import { tableizeBrands } from '../ui/brand';
-import { tableizePackages } from '../ui/package';
+import { DeliverySolutionsClient, DSClient } from '../ds/client'
 
 export const command = 'env'
 export const description = 'do stuff'

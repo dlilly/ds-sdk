@@ -2,7 +2,7 @@ const { Input } = require('enquirer')
 
 import chalk from 'chalk'
 
-import { DeliverySolutionsClient } from '../ds-client'
+import { DeliverySolutionsClient } from '../ds/client'
 import { PickupLocation } from '../model/location'
 import { tableizeRates } from '../ui/rate'
 import { selectLocation } from '../ui/location'
@@ -34,7 +34,8 @@ export const builder = (yargs: any): any =>
             }
         })
         .command("get", "get rates", rateBuilder, async (context: { ds: DeliverySolutionsClient, location?: PickupLocation, zipcode?: string }) => {
-            const location = await selectLocation(context)
+            const location = await selectLocation(context, true)
+
             const zipcode = context.zipcode || await new Input({
                 message: 'delivery zip code'
             }).run()

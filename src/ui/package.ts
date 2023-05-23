@@ -1,10 +1,9 @@
-const { AutoComplete, Form, Confirm } = require('enquirer')
-
 import chalk from "chalk"
-import { DeliverySolutionsClient } from "../ds-client"
+import { DeliverySolutionsClient } from "../ds/client"
 import { validateIsPositive } from "../helpers/input"
 import { Package } from "../model/package"
 import Table from "cli-table"
+import { AutoComplete, Form } from "../helpers/enquirer"
 
 class PackageInput {
     name!: string
