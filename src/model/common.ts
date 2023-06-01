@@ -4,4 +4,15 @@ class Dimension {
     length!: number
 }
 
-export { Dimension }
+class DeliveryNotification {
+    email: string[] = []
+    sms: string[] = []
+    url?: string
+}
+
+class TimeWindow {
+    startsAt!: number
+    endsAt!: number
+}
+
+export { Dimension, TimeWindow, DeliveryNotification }

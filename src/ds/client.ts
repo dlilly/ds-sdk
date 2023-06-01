@@ -6,6 +6,8 @@ import _ from 'lodash'
 import { Rate } from "../model/rate"
 import { Business } from "../model/business"
 import { DeliveryAssurancePayload, DeliveryAssuranceResult } from "./da-payload"
+import { Order, OrderInput } from "../model/order"
+import { OrderStatus } from "../model/orderstatus"
 
 const baseURL = `https://sandbox.api.deliverysolutions.co/api/v2`
 
@@ -40,6 +42,13 @@ interface DeliverySolutionsClient {
     },
     deliveryAssurance: {
         check: (payload: DeliveryAssurancePayload) => Promise<DeliveryAssuranceResult>
+    },
+    order: {
+        get: () => Promise<Order[]>,
+        getOne: (id: string) => Promise<Order>,
+        create: (order: OrderInput) => Promise<Order>,
+        cancel: (id: string) => Promise<Order>,
+        updateStatus: (order: Order, status: OrderStatus) => Promise<Order>
     }
 }
 
@@ -105,6 +114,38 @@ const DSClient = (tenantId: string, apiKey: string): DeliverySolutionsClient => 
         },
         deliveryAssurance: {
             check: (payload: DeliveryAssurancePayload): Promise<DeliveryAssuranceResult> => http.post('/deliveryAssurance', payload)
+        },
+        order: {
+            get: (): Promise<Order[]> => http.post('/order/list', {}).then(x => x.data),
+            getOne: (id: string): Promise<Order> => http.get(`/order/getById/orderExternalId/${id}`),
+            create: async (order: OrderInput): Promise<Order> => {
+                const o = {
+                    ...order,
+                    pickupTime: null,
+                    pickupTimeStart: null,
+                    pickupTimeEnd: null,
+                    dropoffTime: null,
+                    dropoffTimeStart: null,
+                    dropoffTimeEnd: null,
+                    dispatch: {
+                        type: 'immediate'
+                    }
+                }
+
+                console.log(JSON.stringify(o, undefined, 4))
+
+                return await http.post('/order/placeorder', o)
+            },
+            cancel: (orderExternalId: string): Promise<Order> => http.delete(`/order/orderExternalId/${orderExternalId}`),
+            updateStatus: async (order: Order, status: OrderStatus): Promise<Order> => {
+                const throwaway = await http.post(`/order/updateOrderStatus/orderExternalId/${order.orderExternalId}`, {
+                    type: order.type,
+                    status
+                })
+
+                const updated = await ds.order.getOne(order.orderExternalId)
+                return updated
+            }
         }
     }
 

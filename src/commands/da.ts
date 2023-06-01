@@ -23,15 +23,15 @@ const tableizeDeliveryAssuranceResult = (result: DeliveryAssuranceResult, locati
     })
 
     if (result.dsp) {
-        table.push([chalk.blueBright('dsp'), result.dsp.value.join('\n') || '--', JSON.stringify(result.dsp.errors, undefined, 4)])
+        table.push([chalk.blueBright('dsp'), result.dsp.value.join('\n'), JSON.stringify(result.dsp.errors || [], undefined, 4)])
     }
 
     if (result.storeBoundary) {
-        table.push([chalk.blueBright('store-boundary'), mapStoreExternalIdsToStoreNames(result.storeBoundary.value, locations).join('\n'), result.storeBoundary.errors?.join('\n') || '--'])
+        table.push([chalk.blueBright('store-boundary'), mapStoreExternalIdsToStoreNames(result.storeBoundary.value, locations).join('\n'), JSON.stringify(result.storeBoundary.errors || [], undefined, 4)])
     }
 
     if (result.storeBoundaryDsp) {
-        table.push([chalk.blueBright('store-boundary-dsp'), mapStoreExternalIdsToStoreNames(result.storeBoundaryDsp.value, locations).join('\n'), result.storeBoundaryDsp.errors?.join('\n') || '--'])
+        table.push([chalk.blueBright('store-boundary-dsp'), mapStoreExternalIdsToStoreNames(result.storeBoundaryDsp.value, locations).join('\n'), JSON.stringify(result.storeBoundaryDsp.errors || [], undefined, 4)])
     }
 
     console.log(table.toString())
@@ -40,7 +40,7 @@ const tableizeDeliveryAssuranceResult = (result: DeliveryAssuranceResult, locati
 const options = (yargs: any): any =>
     yargs
         .option('l', {
-            alias: 'pickupLocation',
+            alias: 'pickup-location',
             describe: 'pickup location id'
         })
         .option('z', {
@@ -48,15 +48,26 @@ const options = (yargs: any): any =>
             describe: 'delivery zipcode',
             type: 'string'
         })
+        .option('a', {
+            alias: 'all-services',
+            describe: 'query all services',
+            type: 'boolean'
+        })
         .option('s', {
             alias: 'services',
             describe: 'services',
             type: 'array'
         })
+        .conflicts('a', 's')
 
+const servicesEnum = ["dsp", "store-boundary", "store-boundary-dsp"]
 export const builder = (yargs: any): any =>
     yargs
-        .middleware(async (context: { ds: DeliverySolutionsClient, pickupLocation?: string, location?: PickupLocation }, y: any) => {
+        .middleware(async (context: { ds: DeliverySolutionsClient, pickupLocation?: string, location?: PickupLocation, allServices?: boolean, services?: string[] }, y: any) => {
+            if (context.allServices) {
+                context.services = servicesEnum
+            }
+
             if (context.pickupLocation) {
                 try {
                     context.location = await context.ds.location.getOne(context.pickupLocation)
@@ -67,7 +78,6 @@ export const builder = (yargs: any): any =>
         })
         .command("check", "check delivery assurance", options, async (context: { ds: DeliverySolutionsClient, location?: PickupLocation, zipcode?: string, services?: string[] }) => {
             const locations = await context.ds.location.get()
-            const servicesEnum = ["dsp", "store-boundary", "store-boundary-dsp"]
 
             const deliveryAddress = context.zipcode ? context : await new Form({
                 message: `${chalk.cyanBright('delivery address')} (${chalk.whiteBright('↑/↓/⇥')} to navigate, ${chalk.greenBright('↵')} to submit)`,
@@ -78,13 +88,6 @@ export const builder = (yargs: any): any =>
                 }
             }).run()
 
-            const pickupLocation = context.location || context.services?.includes('dsp') && await new Select({
-                message: `select pickup location (${chalk.whiteBright('↑/↓/⇥')} to navigate, ${chalk.green('space')} to select, ${chalk.greenBright('↵')} to submit)`,
-                limit: locations.length,
-                choices: locations.map(l => l.name),
-                result: (input: any) => locations.find(loc => loc.name === input)
-            }).run()
-
             const services = context.services || await new MultiSelect({
                 message: `select services (${chalk.whiteBright('↑/↓/⇥')} to navigate, ${chalk.green('space')} to select, ${chalk.greenBright('↵')} to submit)`,
                 limit: servicesEnum.length,
@@ -92,9 +95,12 @@ export const builder = (yargs: any): any =>
                 choices: servicesEnum
             }).run()
 
-            // console.log(`pickupLocation: ${pickupLocation}`)
-            // console.log(`deliveryAddress: ${addressToString(deliveryAddress)}`)
-            // console.log(`services: ${services}`)
+            const pickupLocation = context.location || services.includes('dsp') && await new Select({
+                message: `select pickup location (${chalk.whiteBright('↑/↓/⇥')} to navigate, ${chalk.green('space')} to select, ${chalk.greenBright('↵')} to submit)`,
+                limit: locations.length,
+                choices: locations.map(l => l.name),
+                result: (input: any) => locations.find(loc => loc.name === input)
+            }).run()
 
             const result = await context.ds.deliveryAssurance.check({
                 deliveryAddress,

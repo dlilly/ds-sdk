@@ -27,17 +27,28 @@ class Package {
     // unique id that maps to package id in customer system
     packageExternalId!: string // this field is not reflected on the models page for Package: https://docs.deliverysolutions.co/reference/package
 
-    // package size
     size?: Dimension
-
-    // package weight in lb
     weight?: number
-    
-    // these need to move elsewhere
     description?: string
-    quantity?: number
-    items?: number = 1
-    itemList?: OrderItem[]
 }
 
-export { Package }
+type TemperatureControl = 'none' | 'frozen' | 'refrigerated' | 'cool' | 'ambient' | 'warm' | ''
+
+class DeliveryPackage extends Package {
+    quantity!: number
+    items: number = 1
+    itemList: OrderItem[] = []
+    temperatureControl: TemperatureControl = ''
+    content!: Content
+}
+
+class Content {
+    isSpirit:           boolean = false
+    isBeerOrWine:       boolean = false
+    isTobacco:          boolean = false
+    isFragile:          boolean = false
+    isRx:               boolean = false
+    hasPerishableItems: boolean = false
+}
+
+export { Package, DeliveryPackage, TemperatureControl }

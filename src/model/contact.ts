@@ -11,11 +11,11 @@ class Contact {
     https://docs.deliverysolutions.co/reference/contact
 */
 
-class OrderContact extends Contact {
+class DeliveryContact extends Contact {
     email: string = ''
     customerId: string = ''
     notifySms: boolean = false
     notifyEmail: boolean = false
 }
 
-export { Contact, OrderContact }
+export { Contact, DeliveryContact }
