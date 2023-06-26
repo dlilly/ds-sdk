@@ -4,8 +4,8 @@
 
 import { Dimension } from "./common"
 
-class OrderItem {
-    sku!: string
+type OrderItem = {
+    sku: string
 
     upc?: string
     quantity?: number

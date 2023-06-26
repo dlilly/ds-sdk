@@ -8,6 +8,9 @@ import { Business } from "../model/business"
 import { DeliveryAssurancePayload, DeliveryAssuranceResult } from "./da-payload"
 import { Order, OrderInput } from "../model/order"
 import { OrderStatus } from "../model/orderstatus"
+import { Boundary } from "../model/boundary"
+import { ConfiguredReturnMethod, ReturnMethod } from "../model/returns"
+import { BrandTimingQuery, StoreTimingQuery, TimingQuery, TimingType, TimingTypes } from "../model/common"
 
 const baseURL = `https://sandbox.api.deliverysolutions.co/api/v2`
 
@@ -18,8 +21,11 @@ interface DeliverySolutionsClient {
     business: {
         get: () => Promise<Business>
     },
+    boundary: {
+        get: () => Promise<Boundary[]>
+    },
     brand: {
-        get: (opts?: { filterActive: boolean }) => Promise<Brand[]>,
+        get: () => Promise<Brand[]>,
         getDefault: () => Promise<Brand>,
         getOne: (id: string) => Promise<Brand>,
         create: (brand: Brand) => Promise<Brand>
@@ -47,16 +53,34 @@ interface DeliverySolutionsClient {
         get: () => Promise<Order[]>,
         getOne: (id: string) => Promise<Order>,
         create: (order: OrderInput) => Promise<Order>,
-        cancel: (id: string) => Promise<Order>,
+        cancel: (order: Order) => Promise<Order>,
         updateStatus: (order: Order, status: OrderStatus) => Promise<Order>
+    },
+    returns: {
+        methods: {
+            get: () => Promise<ConfiguredReturnMethod[]>,
+            list: () => Promise<ReturnMethod[]>
+        }
+    },
+    smartWindow: {
+        get: (stores: PickupLocation[], types: string[]) => Promise<any>,
+        timings: {
+            getByStore: (type: TimingType, id: string) => Promise<any>,
+            getByBrand: (type: TimingType, id: string) => Promise<any>
+        }
     }
 }
 
 const DSClient = (tenantId: string, apiKey: string): DeliverySolutionsClient => {
     const request = async (apiPath: string, init?: AxiosRequestConfig) => {
+        let uri = `${baseURL}${apiPath}`
+        if (apiPath.indexOf('/store/boundary') > -1) {
+            uri = uri.replace('/api/v2', '')
+        }
+        const url = encodeURI(uri)
         return await axios.request({
             ...init,
-            url: encodeURI(`${baseURL}${apiPath}`),
+            url,
             headers: {
                 'tenantId': tenantId,
                 'x-api-key': apiKey
@@ -81,8 +105,24 @@ const DSClient = (tenantId: string, apiKey: string): DeliverySolutionsClient => 
         business: {
             get: (): Promise<Business> => http.get('/business')
         },
+        boundary: {
+            get: async (): Promise<Boundary[]> => {
+                const boundaries = (await http.get('/store/boundary')).data
+
+                for await (let b of boundaries) {
+                    if (b.shape === 'circle' && !b.longitude && !b.latitude && !b.address) {
+                        // if we have no specified center point lat/lng or address we use the store's location
+                        const store = await ds.location.getOne(b.storeExternalId)
+                        b.latitude = store.address.latitude
+                        b.longitude = store.address.longitude
+                    }
+                }
+
+                return boundaries
+            }
+        },
         brand: {
-            get: async (opts?: { filterActive: boolean }): Promise<Brand[]> => (await http.get('/brand')).filter((brand: { active: any }) => !opts?.filterActive || brand.active),
+            get: (): Promise<Brand[]> => http.get(`/brand`),
             getDefault: async (): Promise<Brand> => {
                 const brands = await ds.brand.get()
                 return brands.find(brand => brand.isDefault) || brands[0]
@@ -136,15 +176,33 @@ const DSClient = (tenantId: string, apiKey: string): DeliverySolutionsClient => 
 
                 return await http.post('/order/placeorder', o)
             },
-            cancel: (orderExternalId: string): Promise<Order> => http.delete(`/order/orderExternalId/${orderExternalId}`),
+            cancel: (order: Order): Promise<Order> => http.delete(`/order/orderExternalId/${order.orderExternalId}`),
             updateStatus: async (order: Order, status: OrderStatus): Promise<Order> => {
-                const throwaway = await http.post(`/order/updateOrderStatus/orderExternalId/${order.orderExternalId}`, {
-                    type: order.type,
+                // post the update
+                await http.post(`/order/updateOrderStatus/orderExternalId/${order.orderExternalId}`, {
                     status
                 })
 
-                const updated = await ds.order.getOne(order.orderExternalId)
-                return updated
+                // return the updated resource
+                return await ds.order.getOne(order.orderExternalId)
+            }
+        },
+        returns: {
+            methods: {
+                get: (): Promise<ConfiguredReturnMethod[]> => http.get('/returns/methods'),
+                list: (): Promise<ReturnMethod[]> => http.get('/returns/supported-methods')
+            }
+        },
+        smartWindow: {
+            get: async (stores: PickupLocation[], types: string[]): Promise<any> => {
+                return await http.post('/smartWindows', {
+                    storeExternalIds: stores.map(s => s.storeExternalId),
+                    types
+                })
+            },
+            timings: {
+                getByStore: (type: TimingType, id: string): Promise<any> => http.get(`/timings/${type}?storeExternalId=${id}`),
+                getByBrand: (type: TimingType, id: string): Promise<any> => http.get(`/timings/${type}?brandExternalId=${id}`)
             }
         }
     }

@@ -1,15 +1,20 @@
 import { Address } from "../model/address"
 
-class DeliveryAssurancePayload {
-    deliveryAddress!: Address
-    services!: string[]
-    storeExternalId!: string
+type DSPResult = {
+    value: string[]
+    errors: Error[]
 }
 
-class DeliveryAssuranceResult {
-    dsp?: { value: string[], errors: Error[] }
-    storeBoundary?: { value: string[], errors: Error[] }
-    storeBoundaryDsp?: { value: string[], errors: Error[] }
+type DeliveryAssurancePayload = {
+    deliveryAddress: Partial<Address>
+    services: string[]
+    storeExternalId: string
+}
+
+type DeliveryAssuranceResult = {
+    dsp?: DSPResult
+    'store-boundary'?: DSPResult
+    'store-boundary-dsp'?: DSPResult
 }
 
 export { DeliveryAssurancePayload, DeliveryAssuranceResult }

@@ -4,24 +4,24 @@
 
 import { Address } from "./address"
 
-class Business {
-    corporateName!: string
-    tenantId!: string
+type Business = {
+    corporateName: string
+    tenantId: string
 
     // why is this contactName as opposed to contact on pickupLocation?
-    contactName!: string
+    contactName: string
 
     // business contact email
-    email!: string
+    email: string
 
     // business phone number
-    contact!: string
+    contact: string
 
     // business address
-    address!: Address
+    address: Address
 
     // currency code
-    currencyCode!: string
+    currencyCode: string
 }
 
 export { Business }

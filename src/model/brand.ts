@@ -3,6 +3,7 @@
 */
 
 import { Address } from "./address"
+import { Activatible, DeliverySolutionsBaseType } from "./common"
 
 /**
  * there are two api calls exposed for brands:
@@ -20,33 +21,26 @@ import { Address } from "./address"
  * isDeleted
  * 
  */
-class Brand {
+
+type Brand = DeliverySolutionsBaseType & Activatible & {
     name: string
     address: Address
+    brandExternalId: string
 
-    _id: string = ''
-    brandExternalId: string = ''
-    description: string = ''
-    currencyCode: string = ''
-    active: boolean = false
-    tenantId: string = ''
+    description?: string
+    currencyCode?: string
+    tenantId?: string
     atRisk?: AtRisk
-    pickupInstructions: string = ''
-    isDefault: boolean = false
-    createdAt: string = ''
-    lastUpdatedAt: string = ''
-
-    constructor(input: { name: string, address: Address }) {
-        this.name = input.name
-        this.address = input.address
-    }
+    pickupInstructions?: string
+    isDefault?: boolean
+    createdAt?: string
+    lastUpdatedAt?: string
 }
 
-/* i don't really see any documentation around AtRisk */
-class AtRisk {
-    isCorporateAtRisk!: boolean
-    pickupStart!: number
-    dropoffEnd!: number
+type AtRisk = {
+    isCorporateAtRisk: boolean
+    pickupStart: number
+    dropoffEnd: number
 }
 
 export { Brand, AtRisk }

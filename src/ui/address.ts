@@ -1,4 +1,8 @@
+import { Form, MultiSelect, Select } from "../helpers/enquirer"
 import { Address } from "../model/address"
+import chalk from "chalk"
+import { PickupLocation } from "../model/location"
+import { DeliverySolutionsClient } from "../ds/client"
 
 const addressToString = (address: Address): string => {
     return `${address.street}\n${address.city}, ${address.state}\n${address.zipcode} ${address.country || ''}`
@@ -23,4 +27,43 @@ const validateAddress = (input: Address) => {
         input.zipcode.length === 0 && 'zipcode is required'
 }
 
-export { addressToString, addressPrompts, validateAddress }
+const promptForAddress = async (context: { zipcode?: string }): Promise<Address> => {
+    return context.zipcode ? context : await new Form({
+        message: `${chalk.cyanBright('delivery address')} (${chalk.whiteBright('↑/↓/⇥')} to navigate, ${chalk.greenBright('↵')} to submit)`,
+        choices: addressPrompts(context),
+        validate: (input: Address) => {
+            return input.zipcode.length === 0 && 'zipcode is required' ||
+                true
+        }
+    }).run()
+}
+
+const DSDeliveryServices = ["dsp", "store-boundary", "store-boundary-dsp"]
+const promptForServices = async (context: { allServices?: boolean, services?: string[] }): Promise<string[]> => {
+    return context.allServices ? DSDeliveryServices : context.services || await new MultiSelect({
+        message: `select services (${chalk.whiteBright('↑/↓/⇥')} to navigate, ${chalk.green('space')} to select, ${chalk.greenBright('↵')} to submit)`,
+        limit: DSDeliveryServices.length,
+        initial: context.services,
+        choices: DSDeliveryServices
+    }).run()
+}
+
+const promptForPickupLocation = async (context: { ds: DeliverySolutionsClient, pickupLocation?: string }, services: string[]): Promise<PickupLocation> => {
+    if (context.pickupLocation) {
+        try {
+            return await context.ds.location.getOne(context.pickupLocation)
+        } catch (error) {
+            throw `${chalk.redBright('error')} location ${chalk.green(context.pickupLocation)} not found`
+        }
+    }
+
+    const locations = await context.ds.location.get()
+    return services.includes('dsp') && await new Select({
+        message: `select pickup location (${chalk.whiteBright('↑/↓/⇥')} to navigate, ${chalk.green('space')} to select, ${chalk.greenBright('↵')} to submit)`,
+        limit: locations.length,
+        choices: locations.map(l => l.name),
+        result: (input: any) => locations.find(loc => loc.name === input)
+    }).run()
+}
+
+export { addressToString, addressPrompts, validateAddress, promptForAddress, promptForServices, promptForPickupLocation, DSDeliveryServices }

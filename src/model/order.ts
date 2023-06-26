@@ -12,50 +12,51 @@ type SignatureRequirement = 'not_required' | 'required' | 'unattended' | 'requir
 
 type OrderInput = Partial<Order> & Pick<Order, 'storeExternalId' | 'orderExternalId' | 'orderValue' | 'deliveryAddress' | 'deliveryContact'>
 
-class ProposedProvider {
-    name!: string
-    services: string[] = []
+type ProposedProvider = {
+    name: string
+    services: string[]
 }
 
-class OrderDispatch {
-    type!: DispatchType
+type OrderDispatch = {
+    type: DispatchType
     time?: number
     basedOn?: DispatchTimeBasedOn
 }
 
-class AlternateLocation {
-    name!: string
+type AlternateLocation = {
+    name: string
+    provider: string
+
     type?: string
     phone?: string
-    provider!: string
     address?: Address
     dspLocationId?: string
-    locationTimings?: string[] = []
+    locationTimings?: string[]
 }
 
-class Order {
-    storeExternalId!: string
-    orderExternalId!: string
-    orderValue!: number
-    deliveryContact!: DeliveryContact
-    deliveryAddress!: Address
+type Order = {
+    storeExternalId: string
+    orderExternalId: string
+    orderValue: number
+    deliveryContact: DeliveryContact
+    deliveryAddress: Address
 
-    type: OrderType = ''
-    packages: DeliveryPackage[] = []
+    type: OrderType
+    packages: DeliveryPackage[]
 
-    isSpirit: boolean = false
-    isBeerOrWine: boolean = false
-    isTobacco: boolean = false
-    isFragile: boolean = false
-    isRx: boolean = false
-    hasRefrigeratedItems: boolean = false
-    hasPerishableItems: boolean = false
+    isSpirit: boolean
+    isBeerOrWine: boolean
+    isTobacco: boolean
+    isFragile: boolean
+    isRx: boolean
+    hasRefrigeratedItems: boolean
+    hasPerishableItems: boolean
 
-    orderAttributes: { [key: string]: string } = {}
-    itemList: OrderItem[] = []
+    orderAttributes: { [key: string]: string }
+    itemList: OrderItem[]
 
-    temperatureControl?: TemperatureControl = ''
-    barcodes?: string[] = []
+    temperatureControl?: TemperatureControl
+    barcodes?: string[]
 
     // optionals
     groupId?: string
@@ -73,7 +74,7 @@ class Order {
     proposedProviders?: ProposedProvider[]
     dispatch?: OrderDispatch
 
-    status!: OrderStatus
+    status: OrderStatus
 }
 
-export { Order, OrderInput }
+export { Order, OrderInput, OrderType, DispatchType }

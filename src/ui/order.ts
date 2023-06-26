@@ -5,12 +5,14 @@ import { addressToString } from "./address"
 
 const tableizeOrders = (orders: Order[]) => {
     const table = new Table({
-        head: ['id','status'],
-        colWidths: [30, 20]
+        head: ['id','status','dsp','etd'],
+        colWidths: [20, 20, 20, 40]
     })
 
     orders.forEach(order => {
-        table.push([order.orderExternalId, order.status])
+        const d = new Date()
+        d.setTime((order as any).estimatedDeliveryTime)
+        table.push([order.orderExternalId, order.status, (order as any).provider, d.toUTCString()])
     })
 
     console.log(table.toString())

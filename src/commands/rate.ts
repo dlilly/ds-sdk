@@ -29,17 +29,13 @@ export const builder = (yargs: any): any =>
                 try {
                     context.location = await context.ds.location.getOne(context.pickupLocation)
                 } catch (error) {
-                    throw new Error(`${chalk.redBright('error')} location ${chalk.green(context.pickupLocation)} not found`)
+                    throw `${chalk.redBright('error')} location ${chalk.green(context.pickupLocation)} not found`
                 }
             }
         })
         .command("get", "get rates", rateBuilder, async (context: { ds: DeliverySolutionsClient, location?: PickupLocation, zipcode?: string }) => {
-            const location = await selectLocation(context, true)
-
-            const zipcode = context.zipcode || await new Input({
-                message: 'delivery zip code'
-            }).run()
-
+            const location = await selectLocation(context)
+            const zipcode = context.zipcode || await new Input({ message: 'delivery zip code' }).run()
             const result = await context.ds.rate.get(location, zipcode)
             tableizeRates(result)
         })

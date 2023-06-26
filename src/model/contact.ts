@@ -2,20 +2,20 @@
     https://docs.deliverysolutions.co/reference/location-contact-1
 */
 
-class Contact {
-    name!: string
-    phone!: string
+type Contact = {
+    name: string
+    phone: string
 }
 
 /*
     https://docs.deliverysolutions.co/reference/contact
 */
 
-class DeliveryContact extends Contact {
-    email: string = ''
-    customerId: string = ''
-    notifySms: boolean = false
-    notifyEmail: boolean = false
+type DeliveryContact = Contact & {
+    email: string
+    customerId: string
+    notifySms: boolean
+    notifyEmail: boolean
 }
 
 export { Contact, DeliveryContact }

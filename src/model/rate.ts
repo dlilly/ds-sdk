@@ -2,27 +2,27 @@
     https://docs.deliverysolutions.co/reference/rate-1
 */
 
-class Rate {
+type Rate = {
     // delivery service provider
-    provider!: string
+    provider: string
 
     // flag that specifies whether provider gives estimates
-    noEstimate: boolean = false
+    noEstimate: boolean
 
     // is winning estimate or not, only if allowOrchestration is true
-    ruleApplied: boolean = false
+    ruleApplied: boolean
 
     // ISO-4217 currency code
-    currencyCode!: string
+    currencyCode: string
 
     // estimated amount the provider will charge
-    amount!: number
+    amount: number
 
     // fee to be charged to the customer
-    fee!: number
+    fee: number
 
     // minor unit of currency, eg, 'cents'
-    currency!: string
+    currency: string
 
     // when will this estimate expire?
     expires?: string
@@ -45,22 +45,22 @@ class Rate {
     estimatedDeliveryTimeEnds?: string
 
     // service type eg curbside, in-store pickup, etc
-    type!: string
+    type: string
 
     // provider service type
-    serviceType!: string
+    serviceType: string
 
     // provider service id
-    serviceId!: string
+    serviceId: string
 
     // pickup location
-    storeExternalId!: string
+    storeExternalId: string
 
     // does the given provider support alternate location?
-    supportsAlternateLocation!: boolean
+    supportsAlternateLocation: boolean
 
     // corresponding matched tags from the DSP
-    tags!: string[]
+    tags: string[]
 }
 
 export { Rate }

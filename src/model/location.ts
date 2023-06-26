@@ -4,21 +4,22 @@
 
 import { Address } from "./address"
 import { Contact } from "./contact"
+import { Activatible, DeliverySolutionsBaseType } from "./common"
 
-class PickupLocation {
-    active?: boolean
-    name!: string
-    storeExternalId!: string
-    brandExternalId!: string
-    address!: Address
-    contact!: Contact
-    timeZone?: string
-    currencyCode?: string
-    description?: string
-    pickupInstructions?: string
-    returnStoreId?: string
-    dspAttributes?: any
-    DSPs?: any[]
+type PickupLocation = DeliverySolutionsBaseType & Activatible & {
+    name: string
+    storeExternalId: string
+    brandExternalId: string
+    address: Address
+    contact: Contact
+
+    timeZone: string
+    currencyCode: string
+    description: string
+    pickupInstructions: string
+    returnStoreId: string
+    dspAttributes: any
+    DSPs: any[]
 }
 
 export { PickupLocation }

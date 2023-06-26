@@ -20,12 +20,11 @@ import { OrderItem } from "./orderitem"
  * (eg, the one in Models is more like order-package)
  */
 
-class Package {
-    // name of package or 'custom'
-    name!: string
+type Package = {
+    name: string
 
     // unique id that maps to package id in customer system
-    packageExternalId!: string // this field is not reflected on the models page for Package: https://docs.deliverysolutions.co/reference/package
+    packageExternalId: string
 
     size?: Dimension
     weight?: number
@@ -34,21 +33,21 @@ class Package {
 
 type TemperatureControl = 'none' | 'frozen' | 'refrigerated' | 'cool' | 'ambient' | 'warm' | ''
 
-class DeliveryPackage extends Package {
-    quantity!: number
-    items: number = 1
-    itemList: OrderItem[] = []
-    temperatureControl: TemperatureControl = ''
-    content!: Content
+type DeliveryPackage = Package & {
+    quantity: number
+    items: number
+    itemList: OrderItem[]
+    temperatureControl: TemperatureControl
+    content: Content
 }
 
-class Content {
-    isSpirit:           boolean = false
-    isBeerOrWine:       boolean = false
-    isTobacco:          boolean = false
-    isFragile:          boolean = false
-    isRx:               boolean = false
-    hasPerishableItems: boolean = false
+type Content = {
+    isSpirit:           boolean
+    isBeerOrWine:       boolean
+    isTobacco:          boolean
+    isFragile:          boolean
+    isRx:               boolean
+    hasPerishableItems: boolean
 }
 
 export { Package, DeliveryPackage, TemperatureControl }

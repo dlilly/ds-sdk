@@ -4,15 +4,10 @@ import { Brand } from "../model/brand"
 import Table from "cli-table"
 import chalk from "chalk"
 import { AutoComplete, Form } from "../helpers/enquirer"
+import { filterInactive } from "../helpers/ds-middleware"
+import { Address } from "../model/address"
 
-class BrandInput {
-    name!: string
-    street!: string
-    city!: string
-    state!: string
-    zipcode!: string
-}
-
+type BrandInput = Brand & Address
 const editBrand = async (context: { ds: DeliverySolutionsClient, brand?: Brand }): Promise<Brand> => {
     const brandForm = new Form({
         message: `${chalk.cyanBright('brand details')} (${chalk.whiteBright('↑/↓/⇥')} to navigate, ${chalk.greenBright('↵')} to submit)`,
@@ -33,12 +28,16 @@ const editBrand = async (context: { ds: DeliverySolutionsClient, brand?: Brand }
     return await brandForm.run()
 }
 
-const selectBrand = async (context: { ds: DeliverySolutionsClient, brand?: Brand, filterActive?: boolean }): Promise<Brand> => {
-    if (context.brand) {
-        return context.brand
+const selectBrand = async (context: { ds: DeliverySolutionsClient, brandExternalId?: string, showInactive?: boolean }): Promise<Brand> => {
+    if (context.brandExternalId) {
+        try {
+            return await context.ds.brand.getOne(context.brandExternalId)
+        } catch (error) {
+            throw `${chalk.redBright('error')} brand ${chalk.green(context.brandExternalId)} not found`
+        }
     }
 
-    const brands = await context.ds.brand.get({ filterActive: context.filterActive || false })
+    const brands = filterInactive(await context.ds.brand.get(), context)
     const selectedName = await (new AutoComplete({
         message: 'select a brand',
         choices: brands.map(brand => brand.name),
